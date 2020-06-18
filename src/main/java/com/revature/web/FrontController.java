@@ -13,7 +13,9 @@ import com.revature.authorization.AuthService;
 import com.revature.controllers.UserController;
 import com.revature.exceptions.AuthorizationException;
 import com.revature.exceptions.NotLoggedInException;
+import com.revature.models.User;
 import com.revature.templates.MessageTemplate;
+import java.util.List;
 
 public class FrontController extends HttpServlet {
 
@@ -21,16 +23,19 @@ public class FrontController extends HttpServlet {
 	 * 
 	 */
 	private static final long serialVersionUID = -4854248294011883310L;
-    private static final UserController userController;
+    private static final UserController userController = new UserController();
 	private static final ObjectMapper om = new ObjectMapper();
 		
 	@Override
 		protected void doGet(HttpServletRequest req, HttpServletResponse res)
 		         throws ServletException, IOException {
-			res.setContentType("application/json");
-	  final String URI = req.getRequestURI().replace("/SerletDemo","").replaceFirst("/", "");
+		res.setContentType("application/json");
+		res.setStatus(404);
+		//prevent non-desired endpoints from being succsessful
+	    final String URI = req.getRequestURI().replace("/ServletDemo","").replaceFirst("/", "");
 	  			
-	  String[] portions = URI.split("/");
+	    
+	    String[] portions = URI.split("/");
 	  
 //	  System.out.println(Arrays.toString(portions));
 	  
@@ -40,49 +45,64 @@ public class FrontController extends HttpServlet {
 	    		 case "users":
 	    			 if(portions.length > 1) {  //could also use lenght == 2
 	    				 // Delegate to a Controller method to handle obtaining a User by ID
-	    				 int id = Integer.parseInt(portion[1]);
-	    				 AuthService.guard(req.getSession(false),id,"Employee", "Admin");
+	    				 int id = Integer.parseInt(portions[1]);
 	    				 
-	    				 User u = userController.findUserById(req.getSession(false), id);
-	    				 res.setStatus(200);
-	    				 res.getWriter().println(om.writeValueAsString(u));
-	    				 } 
-	    			 else {
-	    				 // Delegate to a Controller method to handle obtaining all users
-	    				 AuthService.guard(req.getSession(false),"Employee", "Admin");
-	    				 List<User> all = userController.findAllUsers(req.getSession(false));  //no valid request then don't create session
-	    				 res.setStatus(200);
-	    				 res.getWriter().println(om.writeValueAsString(all));
-	    			 }
-	    			 
-	    		 break;
-	    		}
-	    	} catch(AuthorizationException e) {
-	    		   res.setStatus(401);
-	    		   MessageTemplate message = new MessageTemplate("The Imcoming token has expired");
-	    		   res.getWriter().println(om.writeValueAsString(message));
-	    	}
-		}
-		
-	
-	
-	    @Override
-		protected void doPost(HttpServletRequest req, HttpServletResponse res)
-		 		throws ServletException, IOException {
-	    	res.setContentType("application/json");
-	    	
-	    	final String URI = req.getRequestURI().replace("/ServletDemo","").replaceFirst("/","");
-	    	
-	    	String[] portions = URI.split("/");
-	    	
-	    	
-	    	System.out.println(req);
-	    	
-		}
-	    
-	    
-	    
-	    
-	    
-	    
-}
+	    				 AuthService.guard(req.getSession(false), id, "Employee", "Admin");
+	 					User u = userController.findUserById(id);
+	 					res.setStatus(200);
+	 					res.getWriter().println(om.writeValueAsString(u));
+	 				} else {
+	 					// Delegate to a Controller method to handle obtaining ALL Users
+	 					AuthService.guard(req.getSession(false), "Employee", "Admin");
+	 					List<User> all = userController.findAllUsers();
+	 					res.setStatus(200);
+	 					res.getWriter().println(om.writeValueAsString(all));
+	 				}
+	 				break;
+	 			case "accounts":
+	 				break;
+	 			}
+	 		} catch(AuthorizationException e) {
+	 			res.setStatus(401);
+	 			MessageTemplate message = new MessageTemplate("The incoming token has expired");
+	 			
+	 			res.getWriter().println(om.writeValueAsString(message));
+	 		} catch(NumberFormatException e) {
+	 			res.setStatus(400);
+	 			MessageTemplate message = new MessageTemplate("The id provided was not an integer");
+	 			
+	 			res.getWriter().println(om.writeValueAsString(message));
+	 		}
+	 	}
+
+	 	@Override
+	 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
+	 		throws ServletException, IOException {
+	 		res.setContentType("application/json");
+	 		res.setStatus(404);
+	 		// Prevents non-desired endpoints from being successful
+	 		final String URI = req.getRequestURI().replace("/ServletDemo", "").replaceFirst("/", "");
+	 		
+	 		String[] portions = URI.split("/");
+
+	 		try {
+	 			switch(portions[0]) {
+	 			case "logout":
+	 				if(userController.logout(req.getSession(false))) {
+	 					res.setStatus(200);
+	 					res.getWriter().println("You have been successfully logged out");
+	 				} else {
+	 					res.setStatus(400);
+	 					res.getWriter().println("You were not logged in to begin with");
+	 				}
+	 				break;
+	 			case "users":
+	 				break;
+	 			}
+	 		} catch(NotLoggedInException e) {
+	 			res.setStatus(401);
+	 			MessageTemplate message = new MessageTemplate("The incoming token has expired");
+	 			res.getWriter().println(om.writeValueAsString(message));
+	 		}
+	 	}
+	 }

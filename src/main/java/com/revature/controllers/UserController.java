@@ -28,7 +28,7 @@ public class UserController {
 		}
 		
 		
-		public List<User> findAllUser() {
+		public List<User> findAllUsers() {
 			return userService.findAll();
 		}
 }

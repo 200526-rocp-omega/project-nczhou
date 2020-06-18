@@ -43,7 +43,10 @@ public class ConnectionUtil {
 		 Class.forName("oracle.jdbc.driver.OracleDriver");
 		 
 		 try {
-			  conn = DriverManager;
+			  conn = DriverManager.getConnection(
+						"jdbc:oracle:thin:@trainingdata.cwhrwc0kcusq.us-east-1.rds.amazonaws.com:1521:ORCL",
+						"beaver",
+						"chew");
 					  
 					  
 					// If you push this to GitHub, everyone can see your password!
