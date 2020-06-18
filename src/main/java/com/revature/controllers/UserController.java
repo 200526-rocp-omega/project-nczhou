@@ -1,7 +1,8 @@
 package com.revature.controllers;
 
-
+import java.util.List;
 import javax.servlet.http.HttpSession;
+
 
 import com.revature.exceptions.NotLoggedInException;
 import com.revature.models.Role;
@@ -20,16 +21,14 @@ public class UserController {
 	 			}
 			return true;
 		}
-		public User findUserById(Httpsession session, int id) {
-			if (session == null || session.getAttribute("currentUser") == null) {
-				throw new NotLoggedInException();
-			}
-			
-			
-			
+		
+		
+		public User findUserById( int id) {
+			return userService.findById(id);
 		}
 		
-		public List<User> findAllUser(HttpSession session) {
-			
+		
+		public List<User> findAllUser() {
+			return userService.findAll();
 		}
 }

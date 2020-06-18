@@ -31,10 +31,19 @@ public class AuthService {
 		try {
 			guard(session, roles);
 		} catch(RoleNotAllowedException e) {
-			User current = (User) session.getAtrribute("currentUser");
+			User current = (User) session.getAttribute("currentUser");
 			if (id != current.getId()) {
 				throw e;
 			}
 		}
+	}
+	
+	public static User guard(HttpSession session) {
+		User currentUser = session == null ? null : (User) session.getAttribute("currentUser");
+		if(session == null || currentUser == null) {
+			throw new NotLoggedInException();
+		}
+		
+		return currentUser;
 	}
 }
